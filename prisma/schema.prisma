@@ -1,0 +1,395 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Role {
+  STUDENT
+  TUTOR
+  ADMIN
+}
+
+enum SessionMode {
+  ONLINE
+  HOME_VISIT
+  TUITION_CENTRE
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+  DISPUTED
+}
+
+enum PaperType {
+  MODEL_PAPER
+  PAST_PAPER
+  TOPIC_TEST
+  QUICK_QUIZ
+}
+
+enum MarkingType {
+  MANUAL
+  AUTO
+  MIXED
+}
+
+enum QuestionType {
+  MCQ
+  STRUCTURED
+  ESSAY
+}
+
+enum SubmissionStatus {
+  IN_PROGRESS
+  SUBMITTED
+  REVIEWED
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  image         String?
+  role          Role      @default(STUDENT)
+  passwordHash  String?
+  emailVerified DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  tutorProfile  TutorProfile?
+  studentProfile StudentProfile?
+  accounts      Account[]
+  sessions      Session[]
+  sentMessages  Message[]     @relation("SentMessages")
+  notifications Notification[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Province {
+  id        String     @id @default(cuid())
+  name      String     @unique
+  slug      String     @unique
+  districts District[]
+}
+
+model District {
+  id         String   @id @default(cuid())
+  name       String
+  slug       String   @unique
+  provinceId String
+  province   Province @relation(fields: [provinceId], references: [id])
+  cities     City[]
+  tutors     TutorLocation[]
+}
+
+model City {
+  id         String   @id @default(cuid())
+  name       String
+  slug       String   @unique
+  districtId String
+  district   District @relation(fields: [districtId], references: [id])
+  tutors     TutorLocation[]
+}
+
+model Subject {
+  id       String  @id @default(cuid())
+  name     String  @unique
+  slug     String  @unique
+  category String
+  icon     String?
+  tutors   TutorSubject[]
+  papers   Paper[]
+}
+
+model TutorProfile {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bio             String?  @db.Text
+  qualification   String?
+  university      String?
+  experience      Int      @default(0)
+  hourlyRate      Int
+  trialClass      Boolean  @default(false)
+  isVerified      Boolean  @default(false)
+  isActive        Boolean  @default(true)
+  profileViews    Int      @default(0)
+  travelRadius    Int      @default(10)
+  avgRating       Float    @default(0)
+  totalReviews    Int      @default(0)
+  totalSessions   Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  subjects        TutorSubject[]
+  locations       TutorLocation[]
+  sessionModes    TutorSessionMode[]
+  availability    Availability[]
+  bookings        Booking[]
+  reviews         Review[]
+  papers          Paper[]
+  payouts         Payout[]
+}
+
+model TutorSubject {
+  id             String       @id @default(cuid())
+  tutorProfileId String
+  subjectId      String
+  grade          String
+  tutorProfile   TutorProfile @relation(fields: [tutorProfileId], references: [id], onDelete: Cascade)
+  subject        Subject      @relation(fields: [subjectId], references: [id])
+  @@unique([tutorProfileId, subjectId, grade])
+}
+
+model TutorLocation {
+  id             String       @id @default(cuid())
+  tutorProfileId String
+  districtId     String
+  cityId         String?
+  tutorProfile   TutorProfile @relation(fields: [tutorProfileId], references: [id], onDelete: Cascade)
+  district       District     @relation(fields: [districtId], references: [id])
+  city           City?        @relation(fields: [cityId], references: [id])
+}
+
+model TutorSessionMode {
+  id             String      @id @default(cuid())
+  tutorProfileId String
+  mode           SessionMode
+  tutorProfile   TutorProfile @relation(fields: [tutorProfileId], references: [id], onDelete: Cascade)
+  @@unique([tutorProfileId, mode])
+}
+
+model Availability {
+  id             String       @id @default(cuid())
+  tutorProfileId String
+  dayOfWeek      Int
+  startTime      String
+  endTime        String
+  tutorProfile   TutorProfile @relation(fields: [tutorProfileId], references: [id], onDelete: Cascade)
+}
+
+model StudentProfile {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  grade       String?
+  school      String?
+  district    String?
+  examDate    DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  bookings    Booking[]
+  reviews     Review[]
+  submissions PaperSubmission[]
+}
+
+model Booking {
+  id              String        @id @default(cuid())
+  tutorProfileId  String
+  studentProfileId String
+  subjectId       String?
+  sessionMode     SessionMode
+  durationMins    Int
+  scheduledAt     DateTime
+  status          BookingStatus @default(PENDING)
+  totalAmount     Int
+  platformFee     Int
+  tutorAmount     Int
+  notes           String?       @db.Text
+  zoomLink        String?
+  escrowReleaseAt DateTime?
+  paymentRef      String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  tutorProfile    TutorProfile    @relation(fields: [tutorProfileId], references: [id])
+  studentProfile  StudentProfile  @relation(fields: [studentProfileId], references: [id])
+  review          Review?
+  messages        Message[]
+  dispute         Dispute?
+}
+
+model Review {
+  id               String         @id @default(cuid())
+  bookingId        String         @unique
+  tutorProfileId   String
+  studentProfileId String
+  rating           Float
+  teachingRating   Float
+  punctualityRating Float
+  materialsRating  Float
+  valueRating      Float
+  comment          String?        @db.Text
+  createdAt        DateTime       @default(now())
+
+  booking        Booking        @relation(fields: [bookingId], references: [id])
+  tutorProfile   TutorProfile   @relation(fields: [tutorProfileId], references: [id])
+  studentProfile StudentProfile @relation(fields: [studentProfileId], references: [id])
+}
+
+model Message {
+  id         String   @id @default(cuid())
+  bookingId  String?
+  senderId   String
+  content    String   @db.Text
+  read       Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  booking  Booking? @relation(fields: [bookingId], references: [id])
+  sender   User     @relation("SentMessages", fields: [senderId], references: [id])
+}
+
+model Paper {
+  id             String      @id @default(cuid())
+  tutorProfileId String
+  subjectId      String
+  title          String
+  type           PaperType
+  markingType    MarkingType @default(MANUAL)
+  timeLimitMins  Int?
+  dueDate        DateTime?
+  totalMarks     Int         @default(100)
+  fileUrl        String?
+  isPublished    Boolean     @default(false)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  tutorProfile  TutorProfile     @relation(fields: [tutorProfileId], references: [id])
+  subject       Subject          @relation(fields: [subjectId], references: [id])
+  questions     Question[]
+  submissions   PaperSubmission[]
+  assignments   PaperAssignment[]
+}
+
+model Question {
+  id           String       @id @default(cuid())
+  paperId      String
+  orderNum     Int
+  type         QuestionType
+  content      String       @db.Text
+  marks        Int          @default(1)
+  optionA      String?
+  optionB      String?
+  optionC      String?
+  optionD      String?
+  correctOption String?
+  tutorNote    String?      @db.Text
+  paper        Paper        @relation(fields: [paperId], references: [id], onDelete: Cascade)
+  answers      Answer[]
+}
+
+model PaperAssignment {
+  id               String         @id @default(cuid())
+  paperId          String
+  studentProfileId String
+  assignedAt       DateTime       @default(now())
+  paper            Paper          @relation(fields: [paperId], references: [id])
+}
+
+model PaperSubmission {
+  id               String           @id @default(cuid())
+  paperId          String
+  studentProfileId String
+  status           SubmissionStatus @default(IN_PROGRESS)
+  score            Float?
+  tutorFeedback    String?          @db.Text
+  startedAt        DateTime         @default(now())
+  submittedAt      DateTime?
+  reviewedAt       DateTime?
+
+  paper          Paper          @relation(fields: [paperId], references: [id])
+  studentProfile StudentProfile @relation(fields: [studentProfileId], references: [id])
+  answers        Answer[]
+}
+
+model Answer {
+  id             String          @id @default(cuid())
+  submissionId   String
+  questionId     String
+  content        String?         @db.Text
+  selectedOption String?
+  marksAwarded   Float?
+  tutorAnnotation String?        @db.Text
+  isFlagged      Boolean         @default(false)
+  submission     PaperSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  question       Question        @relation(fields: [questionId], references: [id])
+}
+
+model Resource {
+  id             String   @id @default(cuid())
+  tutorProfileId String
+  title          String
+  type           String
+  fileUrl        String
+  description    String?  @db.Text
+  createdAt      DateTime @default(now())
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  body      String
+  type      String
+  read      Boolean  @default(false)
+  link      String?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Dispute {
+  id         String   @id @default(cuid())
+  bookingId  String   @unique
+  issue      String   @db.Text
+  amount     Int
+  status     String   @default("OPEN")
+  resolution String?  @db.Text
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  booking    Booking  @relation(fields: [bookingId], references: [id])
+}
+
+model Payout {
+  id             String       @id @default(cuid())
+  tutorProfileId String
+  amount         Int
+  period         String
+  sessionCount   Int
+  status         String       @default("PENDING")
+  paidAt         DateTime?
+  createdAt      DateTime     @default(now())
+  tutorProfile   TutorProfile @relation(fields: [tutorProfileId], references: [id])
+}
