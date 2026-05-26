@@ -1,26 +1,88 @@
-import { NextRequest, NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
-import { PLATFORM_FEE_RATE } from "@/lib/utils"
+import { NextRequest, NextResponse } from 'next/server'
+import { getServerSession } from 'next-auth'
+import { z } from 'zod'
+import { prisma } from '@/lib/prisma'
+import { authOptions } from '@/lib/auth'
+import { getPlatformFee, getTutorAmount } from '@/lib/utils'
 
-export async function POST(request: NextRequest) {
-  try {
-    const body = await request.json()
-    const { tutorId, studentId, subject, mode, scheduledAt, durationMins, notes } = body
+const schema = z.object({
+  tutorProfileId: z.string(),
+  subjectId:      z.string().optional(),
+  sessionMode:    z.enum(['ONLINE', 'HOME_VISIT', 'TUITION_CENTRE']),
+  durationMins:   z.number().min(30).max(180),
+  scheduledAt:    z.string(),
+  notes:          z.string().optional(),
+})
 
-    const tutor = await prisma.tutor.findUnique({ where: { id: tutorId } })
-    if (!tutor) return NextResponse.json({ error: "Tutor not found" }, { status: 404 })
+export async function POST(req: NextRequest) {
+  const session = await getServerSession(authOptions)
+  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    const totalAmount = Math.round((tutor.hourlyRate * durationMins) / 60)
-    const platformFee = Math.round(totalAmount * PLATFORM_FEE_RATE)
-    const tutorEarning = totalAmount - platformFee
+  const user = await prisma.user.findUnique({
+    where: { email: session.user.email! },
+    include: { studentProfile: true },
+  })
+  if (!user?.studentProfile) return NextResponse.json({ error: 'Student profile required' }, { status: 400 })
 
-    const booking = await prisma.booking.create({
-      data: { tutorId, studentId, subject, mode, scheduledAt: new Date(scheduledAt), durationMins, hourlyRate: tutor.hourlyRate, totalAmount, platformFee, tutorEarning, notes },
+  const body = await req.json()
+  const data = schema.parse(body)
+
+  const tutor = await prisma.tutorProfile.findUnique({ where: { id: data.tutorProfileId } })
+  if (!tutor) return NextResponse.json({ error: 'Tutor not found' }, { status: 404 })
+
+  const durationHours = data.durationMins / 60
+  const totalAmount   = Math.round(tutor.hourlyRate * durationHours)
+  const platformFee   = getPlatformFee(totalAmount)
+  const tutorAmount   = getTutorAmount(totalAmount)
+
+  const booking = await prisma.booking.create({
+    data: {
+      tutorProfileId:   data.tutorProfileId,
+      studentProfileId: user.studentProfile.id,
+      subjectId:        data.subjectId,
+      sessionMode:      data.sessionMode,
+      durationMins:     data.durationMins,
+      scheduledAt:      new Date(data.scheduledAt),
+      notes:            data.notes,
+      totalAmount,
+      platformFee,
+      tutorAmount,
+      status: 'PENDING',
+    },
+  })
+
+  return NextResponse.json({ booking }, { status: 201 })
+}
+
+export async function GET(req: NextRequest) {
+  const session = await getServerSession(authOptions)
+  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const user = await prisma.user.findUnique({
+    where: { email: session.user.email! },
+    include: { studentProfile: true, tutorProfile: true },
+  })
+
+  let bookings
+  if (user?.studentProfile) {
+    bookings = await prisma.booking.findMany({
+      where:   { studentProfileId: user.studentProfile.id },
+      orderBy: { scheduledAt: 'desc' },
+      include: {
+        tutorProfile: { include: { user: { select: { name: true, image: true } } } },
+      },
     })
-
-    return NextResponse.json({ booking }, { status: 201 })
-  } catch (error) {
-    console.error("Booking creation error:", error)
-    return NextResponse.json({ error: "Failed to create booking" }, { status: 500 })
+  } else if (user?.tutorProfile) {
+    bookings = await prisma.booking.findMany({
+      where:   { tutorProfileId: user.tutorProfile.id },
+      orderBy: { scheduledAt: 'desc' },
+      include: {
+        studentProfile: { include: { user: { select: { name: true, image: true } } } },
+      },
+    })
+  } else {
+    return NextResponse.json({ error: 'Profile not found' }, { status: 404 })
   }
+
+  return NextResponse.json({ bookings })
 }
