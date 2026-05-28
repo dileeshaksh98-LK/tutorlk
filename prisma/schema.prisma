@@ -131,6 +131,7 @@ model Subject {
   icon     String?
   tutors   TutorSubject[]
   papers   Paper[]
+  govPapers GovPaper[]
 }
 
 model TutorProfile {
@@ -214,6 +215,7 @@ model StudentProfile {
   bookings    Booking[]
   reviews     Review[]
   submissions PaperSubmission[]
+  govAttempts GovAttempt[]
 }
 
 model Booking {
@@ -392,4 +394,71 @@ model Payout {
   paidAt         DateTime?
   createdAt      DateTime     @default(now())
   tutorProfile   TutorProfile @relation(fields: [tutorProfileId], references: [id])
+}
+
+model GovPaper {
+  id          String       @id @default(cuid())
+  title       String
+  subjectId   String
+  examType    String
+  year        Int
+  month       String       @default("August")
+  medium      String       @default("SINHALA")
+  stream      String?
+  totalMarks  Int          @default(100)
+  timeMins    Int          @default(180)
+  isActive    Boolean      @default(true)
+  attempts    Int          @default(0)
+  createdAt   DateTime     @default(now())
+
+  subject     Subject      @relation(fields: [subjectId], references: [id])
+  questions   GovQuestion[]
+  govAttempts GovAttempt[]
+}
+
+model GovQuestion {
+  id            String   @id @default(cuid())
+  paperId       String
+  orderNum      Int
+  content       String   @db.Text
+  imageUrl      String?
+  optionA       String
+  optionB       String
+  optionC       String
+  optionD       String
+  correctOption String
+  explanation   String?  @db.Text
+  marks         Float    @default(1)
+
+  paper         GovPaper   @relation(fields: [paperId], references: [id], onDelete: Cascade)
+  answers       GovAnswer[]
+}
+
+model GovAttempt {
+  id               String   @id @default(cuid())
+  studentProfileId String
+  paperId          String
+  status           String   @default("IN_PROGRESS")
+  score            Float?
+  totalQuestions   Int      @default(0)
+  correct          Int      @default(0)
+  timeTakenSecs    Int?
+  startedAt        DateTime @default(now())
+  completedAt      DateTime?
+
+  studentProfile   StudentProfile @relation(fields: [studentProfileId], references: [id], onDelete: Cascade)
+  paper            GovPaper       @relation(fields: [paperId], references: [id])
+  answers          GovAnswer[]
+}
+
+model GovAnswer {
+  id             String      @id @default(cuid())
+  attemptId      String
+  questionId     String
+  selectedOption String?
+  isCorrect      Boolean?
+  timeSecs       Int?
+
+  attempt        GovAttempt  @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  question       GovQuestion @relation(fields: [questionId], references: [id])
 }

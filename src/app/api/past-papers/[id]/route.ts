@@ -3,12 +3,12 @@ import { prisma } from '@/lib/prisma'
 
 export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const paper = await (prisma as any).govPaper.findUnique({
+    const paper = await prisma.govPaper.findUnique({
       where: { id: params.id },
       include: {
         subject: true,
         questions: { orderBy: { orderNum: 'asc' } },
-        _count: { select: { attempts: true } },
+        _count: { select: { govAttempts: true } },
       },
     })
     if (!paper) return NextResponse.json({ error: 'Not found' }, { status: 404 })
