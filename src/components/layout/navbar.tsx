@@ -31,9 +31,10 @@ export function Navbar() {
         {/* Desktop nav */}
         <div className="hidden md:flex items-center gap-1">
           {[
-            { href: '/tutors', label: 'Find tutors' },
+            { href: '/tutors',       label: 'Find tutors' },
             { href: '/tutors?level=OL', label: 'O/L' },
             { href: '/tutors?level=AL', label: 'A/L' },
+            { href: '/past-papers',  label: 'Past papers' },
             { href: '/how-it-works', label: 'How it works' },
           ].map(item => (
             <Link key={item.href} href={item.href}
@@ -63,7 +64,12 @@ export function Navbar() {
                     className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-50 transition-colors" onClick={() => setOpen(false)}>
                     <span>📊</span> Dashboard
                   </Link>
-                  <Link href="/messages" className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-50 transition-colors" onClick={() => setOpen(false)}>
+                  <Link href="/past-papers"
+                    className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-50 transition-colors" onClick={() => setOpen(false)}>
+                    <span>📄</span> Past papers
+                  </Link>
+                  <Link href="/messages"
+                    className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-50 transition-colors" onClick={() => setOpen(false)}>
                     <span>💬</span> Messages
                   </Link>
                   <div className="border-t border-gray-100 mt-1 pt-1">
