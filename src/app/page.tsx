@@ -1,20 +1,13 @@
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
+import { ALLevelCard } from '@/components/home/al-level-card'
 
 const LEVELS = [
-  { name: 'Scholarship',  icon: '🏆', slug: 'SCHOLARSHIP', desc: 'Grade 5',     color: 'from-yellow-400 to-amber-500',  streams: null },
-  { name: 'Grade 6–9',    icon: '📚', slug: 'GRADE_6_9',   desc: 'Junior sec.', color: 'from-blue-400 to-blue-600',     streams: null },
-  { name: 'O/L',          icon: '📝', slug: 'OL',          desc: 'Grade 10–11', color: 'from-green-400 to-emerald-600', streams: null },
-  { name: 'A/L',          icon: '🎓', slug: 'AL',          desc: 'Grade 12–13', color: 'from-brand-400 to-brand-600',
-    streams: [
-      { name: 'Science',    icon: '🔬', slug: 'AL&stream=SCIENCE',    color: 'bg-blue-50 text-blue-700 border-blue-200' },
-      { name: 'Commerce',   icon: '💼', slug: 'AL&stream=COMMERCE',   color: 'bg-green-50 text-green-700 border-green-200' },
-      { name: 'Arts',       icon: '🎨', slug: 'AL&stream=ARTS',       color: 'bg-purple-50 text-purple-700 border-purple-200' },
-      { name: 'Technology', icon: '⚙️', slug: 'AL&stream=TECHNOLOGY', color: 'bg-orange-50 text-orange-700 border-orange-200' },
-    ]
-  },
-  { name: 'Revision',     icon: '🔄', slug: 'REVISION',   desc: 'Crash course', color: 'from-purple-400 to-purple-600', streams: null },
-  { name: 'Music & Sports', icon: '🎵', slug: 'EXTRA',    desc: 'Piano, Swimming & more', color: 'from-pink-400 to-rose-500', streams: null },
+  { name: 'Scholarship', icon: '🏆', slug: 'SCHOLARSHIP', desc: 'Grade 5',      color: 'from-yellow-400 to-amber-500' },
+  { name: 'Grade 6–9',   icon: '📚', slug: 'GRADE_6_9',   desc: 'Junior sec.', color: 'from-blue-400 to-blue-600' },
+  { name: 'O/L',         icon: '📝', slug: 'OL',          desc: 'Grade 10–11', color: 'from-green-400 to-emerald-600' },
+  { name: 'Revision',    icon: '🔄', slug: 'REVISION',    desc: 'Crash course',color: 'from-purple-400 to-purple-600' },
+  { name: 'Music & Sports', icon: '🎵', slug: 'EXTRA',    desc: 'Piano, Swimming & more', color: 'from-pink-400 to-rose-500' },
 ]
 
 const POPULAR = [
@@ -38,7 +31,6 @@ const STATS = [
 export default function HomePage() {
   return (
     <div className="overflow-hidden">
-
       {/* Hero */}
       <section className="relative gradient-mesh min-h-[85vh] flex items-center">
         <div className="absolute top-20 right-10 w-72 h-72 bg-brand-400/10 rounded-full blur-3xl float pointer-events-none" />
@@ -49,8 +41,7 @@ export default function HomePage() {
             🇱🇰 Sri Lanka's #1 tutor marketplace
           </div>
           <h1 className="text-5xl sm:text-6xl font-bold text-gray-900 mb-5 leading-tight animate-fade-in-up" style={{animationDelay:'100ms'}}>
-            Find your perfect<br />
-            <span className="text-gradient">O/L & A/L tutor</span>
+            Find your perfect<br /><span className="text-gradient">O/L & A/L tutor</span>
           </h1>
           <p className="text-lg text-gray-500 mb-8 max-w-lg mx-auto animate-fade-in-up" style={{animationDelay:'200ms'}}>
             Verified tutors in Sinhala, Tamil and English medium. All streams. Island-wide.
@@ -79,51 +70,21 @@ export default function HomePage() {
       <section className="max-w-5xl mx-auto px-4 py-16">
         <div className="text-center mb-10">
           <h2 className="text-3xl font-bold text-gray-900 mb-2">Browse by education level</h2>
-          <p className="text-gray-500">From Grade 5 scholarship to A/L and beyond</p>
+          <p className="text-gray-500">Click any level to find tutors — click A/L to explore streams</p>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+          {/* A/L interactive card */}
+          <ALLevelCard />
+          {/* Other levels */}
           {LEVELS.map((l, i) => (
-            l.streams ? (
-              /* A/L card — shows streams inside */
-              <div key={l.slug}
-                className="group relative bg-white border border-gray-100 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all duration-300 animate-fade-in-up"
-                style={{animationDelay:`${i*60}ms`}}>
-                <div className="flex items-center gap-3 mb-4">
-                  <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${l.color} flex items-center justify-center text-2xl shadow-sm`}>
-                    {l.icon}
-                  </div>
-                  <div>
-                    <div className="font-bold text-gray-800">{l.name}</div>
-                    <div className="text-xs text-gray-400">{l.desc} · 4 streams</div>
-                  </div>
-                </div>
-                {/* Stream pills inside A/L card */}
-                <div className="grid grid-cols-2 gap-2">
-                  {l.streams.map(s => (
-                    <Link key={s.slug} href={`/tutors?level=${s.slug}`}
-                      className={`flex items-center gap-1.5 px-3 py-2 rounded-xl border text-xs font-medium transition-all hover:scale-105 ${s.color}`}>
-                      <span>{s.icon}</span>
-                      <span>{s.name}</span>
-                    </Link>
-                  ))}
-                </div>
-                <Link href="/tutors?level=AL" className="block mt-3 text-center text-xs text-brand-600 hover:text-brand-700 font-medium">
-                  View all A/L tutors →
-                </Link>
-              </div>
-            ) : (
-              /* Normal level card */
-              <Link key={l.slug} href={`/tutors?level=${l.slug}`}
-                className="group relative bg-white border border-gray-100 rounded-2xl p-5 hover:border-transparent hover:shadow-lg transition-all duration-300 card-3d overflow-hidden animate-fade-in-up"
-                style={{animationDelay:`${i*60}ms`}}>
-                <div className={`absolute inset-0 bg-gradient-to-br ${l.color} opacity-0 group-hover:opacity-5 transition-opacity rounded-2xl`} />
-                <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${l.color} flex items-center justify-center text-2xl mb-3 shadow-sm group-hover:scale-110 transition-transform`}>
-                  {l.icon}
-                </div>
-                <div className="font-bold text-gray-800 group-hover:text-brand-600 transition-colors">{l.name}</div>
-                <div className="text-xs text-gray-400 mt-1">{l.desc}</div>
-              </Link>
-            )
+            <Link key={l.slug} href={`/tutors?level=${l.slug}`}
+              className="group relative bg-white border border-gray-100 rounded-2xl p-5 hover:border-transparent hover:shadow-lg transition-all duration-300 card-3d overflow-hidden animate-fade-in-up"
+              style={{animationDelay:`${i*60}ms`}}>
+              <div className={`absolute inset-0 bg-gradient-to-br ${l.color} opacity-0 group-hover:opacity-5 transition-opacity rounded-2xl`} />
+              <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${l.color} flex items-center justify-center text-2xl mb-3 shadow-sm group-hover:scale-110 transition-transform`}>{l.icon}</div>
+              <div className="font-bold text-gray-800 group-hover:text-brand-600 transition-colors">{l.name}</div>
+              <div className="text-xs text-gray-400 mt-1">{l.desc}</div>
+            </Link>
           ))}
         </div>
       </section>
@@ -162,9 +123,9 @@ export default function HomePage() {
         </div>
         <div className="grid sm:grid-cols-3 gap-6">
           {[
-            { flag: '🇱🇰', name: 'Sinhala Medium', local: 'සිංහල මාධ්‍ය',  slug: 'SINHALA', color: 'from-yellow-50 to-amber-50', border: 'border-amber-200' },
-            { flag: '📿',  name: 'Tamil Medium',   local: 'தமிழ் மொழி',    slug: 'TAMIL',   color: 'from-orange-50 to-red-50',   border: 'border-orange-200' },
-            { flag: '🇬🇧', name: 'English Medium', local: 'English medium', slug: 'ENGLISH', color: 'from-blue-50 to-indigo-50',  border: 'border-blue-200' },
+            { flag:'🇱🇰', name:'Sinhala Medium', local:'සිංහල මාධ්‍ය',  slug:'SINHALA', color:'from-yellow-50 to-amber-50', border:'border-amber-200' },
+            { flag:'📿',  name:'Tamil Medium',   local:'தமிழ் மொழி',    slug:'TAMIL',   color:'from-orange-50 to-red-50',   border:'border-orange-200' },
+            { flag:'🇬🇧', name:'English Medium', local:'English medium', slug:'ENGLISH', color:'from-blue-50 to-indigo-50',  border:'border-blue-200' },
           ].map(m => (
             <Link key={m.slug} href={`/tutors?medium=${m.slug}`}
               className={`group bg-gradient-to-br ${m.color} border ${m.border} rounded-2xl p-7 text-center hover:shadow-lg transition-all duration-300 card-3d`}>
