@@ -57,7 +57,7 @@ export function applyAnswerKey(questions: ExtractedQuestion[], key: Record<numbe
 
 export async function extractTextFromPDF(buffer: Buffer): Promise<string> {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const pdfParse = (await import('pdf-parse')).default
+  const pdfParse = (await import('pdf-parse'))
   const data = await pdfParse(buffer, { max: 0 })
   return data.text
 }
