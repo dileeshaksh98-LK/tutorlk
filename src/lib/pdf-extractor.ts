@@ -34,7 +34,7 @@ export function parseMCQText(text: string): ExtractedQuestion[] {
     if (!qText || qText.length < 4) continue
     const optMap: Record<string, string> = {}
     for (let i = 1; i < parts.length; i++) {
-      const m = parts[i].match(/^\(?([A-Ea-e]\)?[.)â€“\-]\s*(.*)/)
+      const m = parts[i].match(/^\(?([A-Ea-e])\)?[.)–\-]\s*(.*)/);
       if (m) optMap[m[1].toUpperCase()] = clean(m[2])
     }
     if (!optMap['A'] || !optMap['B'] || !optMap['C'] || !optMap['D']) continue
