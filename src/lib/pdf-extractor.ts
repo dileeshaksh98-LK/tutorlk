@@ -28,13 +28,13 @@ export function parseMCQText(text: string): ExtractedQuestion[] {
     const orderNum = parseInt(numMatch[1], 10)
     if (orderNum < 1 || orderNum > 100) continue
     const rest = block.slice(numMatch[0].length)
-    const parts = rest.split(/(?=\(?[A-Ea-e]\)?[.)–\-]\s)/)
+    const parts = rest.split(/(?=\(?[A-Ea-e]\)?[.)â€“\-]\s)/)
     if (parts.length < 2) continue
     const qText = clean(parts[0])
     if (!qText || qText.length < 4) continue
     const optMap: Record<string, string> = {}
     for (let i = 1; i < parts.length; i++) {
-      const m = parts[i].match(/^\(?([A-Ea-e])\)?[.)�\-]\s*(.*)/);
+      const m = parts[i].match(/^\(?([A-Ea-e])\)?[.)–\-]\s*(.*)/);
       if (m) optMap[m[1].toUpperCase()] = clean(m[2])
     }
     if (!optMap['A'] || !optMap['B'] || !optMap['C'] || !optMap['D']) continue
@@ -45,7 +45,7 @@ export function parseMCQText(text: string): ExtractedQuestion[] {
 
 export function parseAnswerKey(text: string): Record<number, string> {
   const key: Record<number, string> = {}
-  const pairRe = /(\d{1,2})\s*[.\-–:]\s*([A-Da-d])/g
+  const pairRe = /(\d{1,2})\s*[.\-â€“:]\s*([A-Da-d])/g
   let m: RegExpExecArray | null
   while ((m = pairRe.exec(text)) !== null) { key[parseInt(m[1], 10)] = m[2].toUpperCase() }
   return key
