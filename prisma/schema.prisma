@@ -146,11 +146,6 @@ model TutorProfile {
   trialClass      Boolean  @default(false)
   isVerified      Boolean  @default(false)
   isActive        Boolean  @default(true)
-  attempts     Int          @default(0)
-  createdAt    DateTime     @default(now())
-  status       String       @default("ready")
-  pdfUrl       String?
-  uploadedBy   String?
   profileViews    Int      @default(0)
   travelRadius    Int      @default(10)
   avgRating       Float    @default(0)
@@ -402,24 +397,22 @@ model Payout {
 }
 
 model GovPaper {
-  id          String       @id @default(cuid())
-  title       String
-  subjectId   String
-  examType    String
-  year        Int
-  month       String       @default("August")
-  medium      String       @default("SINHALA")
-  stream      String?
-  totalMarks  Int          @default(100)
-  timeMins    Int          @default(180)
-  isActive    Boolean      @default(true)
+  id           String       @id @default(cuid())
+  title        String
+  subjectId    String
+  examType     String
+  year         Int
+  month        String       @default("August")
+  medium       String       @default("SINHALA")
+  stream       String?
+  totalMarks   Int          @default(100)
+  timeMins     Int          @default(180)
+  isActive     Boolean      @default(true)
   attempts     Int          @default(0)
   createdAt    DateTime     @default(now())
   status       String       @default("ready")
   pdfUrl       String?
   uploadedBy   String?
-  attempts    Int          @default(0)
-  createdAt   DateTime     @default(now())
 
   subject     Subject      @relation(fields: [subjectId], references: [id])
   questions   GovQuestion[]
