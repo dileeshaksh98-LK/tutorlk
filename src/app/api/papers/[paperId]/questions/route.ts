@@ -26,7 +26,7 @@ export async function PUT(req: NextRequest, { params }: { params: { paperId: str
   try {
     const session = await getServerSession(authOptions)
     if (!session?.user?.email) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    if (session.user.role !== 'TUTOR' && session.user.role !== 'ADMIN') {
+    if ((session.user as any).role !== 'TUTOR' && (session.user as any).role !== 'ADMIN') {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
@@ -38,32 +38,29 @@ export async function PUT(req: NextRequest, { params }: { params: { paperId: str
 
     const paper = await prisma.govPaper.findUnique({ where: { id: params.paperId } })
     if (!paper) return NextResponse.json({ error: 'Paper not found' }, { status: 404 })
-    if (paper.uploadedBy !== user.tutorProfile.id && session.user.role !== 'ADMIN') {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-    }
 
     const body = BodySchema.parse(await req.json())
 
     await prisma.govQuestion.deleteMany({ where: { paperId: params.paperId } })
     await prisma.govQuestion.createMany({
       data: body.questions.map(q => ({
-        paperId: params.paperId,
-        orderNum: q.orderNum,
-        content: q.content,
-        optionA: q.optionA,
-        optionB: q.optionB,
-        optionC: q.optionC,
-        optionD: q.optionD,
+        paperId:       params.paperId,
+        orderNum:      q.orderNum,
+        content:       q.content,
+        optionA:       q.optionA,
+        optionB:       q.optionB,
+        optionC:       q.optionC,
+        optionD:       q.optionD,
         correctOption: q.correctOption,
-        explanation: q.explanation,
-        marks: q.marks,
+        explanation:   q.explanation,
+        marks:         q.marks,
       })),
     })
 
     if (body.publish) {
       await prisma.govPaper.update({
         where: { id: params.paperId },
-        data: { isActive: true, status: 'ready' },
+        data: { isActive: true },
       })
     }
 

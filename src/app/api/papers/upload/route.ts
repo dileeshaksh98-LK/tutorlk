@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
     if (!session?.user?.email) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    if (session.user.role !== 'TUTOR' && session.user.role !== 'ADMIN') {
+    if ((session.user as any).role !== 'TUTOR' && (session.user as any).role !== 'ADMIN') {
       return NextResponse.json({ error: 'Only tutors can upload papers' }, { status: 403 })
     }
 
