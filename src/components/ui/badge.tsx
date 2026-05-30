@@ -1,26 +1,8 @@
 import { cn } from '@/lib/utils'
-import { HTMLAttributes } from 'react'
+import { ReactNode } from 'react'
 
-export interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
-  variant?: 'teal' | 'blue' | 'amber' | 'gray' | 'purple' | 'red'
-}
-
-export function Badge({ className, variant = 'gray', ...props }: BadgeProps) {
-  return (
-    <span
-      className={cn(
-        'inline-block text-xs font-medium px-2 py-0.5 rounded-full',
-        {
-          'bg-brand-50 text-brand-600':         variant === 'teal',
-          'bg-blue-50 text-blue-700':           variant === 'blue',
-          'bg-amber-50 text-amber-700':         variant === 'amber',
-          'bg-gray-100 text-gray-600':          variant === 'gray',
-          'bg-purple-50 text-purple-700':       variant === 'purple',
-          'bg-red-50 text-red-700':             variant === 'red',
-        },
-        className
-      )}
-      {...props}
-    />
-  )
+interface BadgeProps { children: ReactNode; variant?: 'default'|'success'|'warning'|'danger'|'info'|'outline'; className?: string }
+const V: Record<string,string> = { default:'bg-gray-100 text-gray-700', success:'bg-green-50 text-green-700 border border-green-200', warning:'bg-amber-50 text-amber-700 border border-amber-200', danger:'bg-red-50 text-red-600 border border-red-200', info:'bg-blue-50 text-blue-700 border border-blue-200', outline:'bg-transparent border border-gray-300 text-gray-600' }
+export function Badge({ children, variant='default', className }: BadgeProps) {
+  return <span className={cn('inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium', V[variant], className)}>{children}</span>
 }
